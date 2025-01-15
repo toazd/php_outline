@@ -98,9 +98,10 @@ if (phpversion() < "7.4.33") {
             # for measuring script execution time
             $start_time = microtime(true);
 
-            if (phpversion() < "5.6.40" || phpversion() > "8.4.0") {
-                echo "<P class=\"debug center\">This script was designed and tested to run well on PHP versions 7.4.33 => v8.4.0<BR>You are using PHP v" . phpversion() . "</P>";
-            }
+            # warning for php versions < 7.4.33 (runs significantly slower)
+            #if (phpversion() < "7.4.33") {
+            #    echo "<P class=\"debug center\">This script runs significantly slower on PHP versions less than v7.4.33. Please consider upgrading.<BR>You are using PHP v" . phpversion() . "</P>";
+            #}
 
             if (phpversion() < "7.4.33") {
                 echo "<P class=\"debug center\">WARNING: This script runs significantly slower on older versions of PHP<BR>Please upgrade to v7 or higher.</P>";
