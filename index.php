@@ -102,7 +102,7 @@ if (phpversion() < "7.4.33") {
             #if (phpversion() < "7.4.33") {
             #    echo "<P class=\"debug center\">This script runs significantly slower on PHP versions less than v7.4.33. Please consider upgrading.<BR>You are using PHP v" . phpversion() . "</P>";
             #}
-
+            
             if (phpversion() < "7.4.33") {
                 echo "<P class=\"debug center\">WARNING: This script runs significantly slower on older versions of PHP<BR>Please upgrade to v7 or higher.</P>";
             }
@@ -151,7 +151,7 @@ if (phpversion() < "7.4.33") {
                 # ignore very common words to avoid unncessarily high processing times
                 if (preg_match("#^the$|^and$|^that$|^shall$|^unto$|^for$|^his$|^her$|^they$|^him$|^not$|^them$|^with$|^all$|^thou$|^thy$|^was$|^man$|^men$|^which$|^where$|^when$|^old$#", trim($search_for))) {
                     #ExitWithException("Ignoring common word \"$search_for\" to avoid high processing times.<BR>Try entering a specific \"book chapter#:verse# $search_for\"");
-                    echo "<P class=\"debug center\">WARNING:<BR>Short or common words may take a long time to process and will produce many results.</P>";
+                    echo "<P class=\"debug center\">Short or common words may take a long time to process and will produce many results.</P>";
                 }
 
                 # global vars
@@ -166,7 +166,7 @@ if (phpversion() < "7.4.33") {
                 $book_verse_mode = false;
                 $term_arr = [];
                 $results_table_begin = false;
-                $total_match_count = 0;
+                $total_replacement_count = 0;
                 $verses_matched = 0;
                 $multi_line = "";
 
@@ -460,7 +460,7 @@ if (phpversion() < "7.4.33") {
                 # NOTE: array sorting is based on the values so we cannot simply sort() and array_flip()
                 $swap_count_arr = [];
                 $sorted_arr = [];
-                $replace_count = 0;
+                $terms_matched_count = 0;
                 if (count($term_arr) > 0) {
 
                     # get a count for how many of each word/phrase occurs
@@ -471,11 +471,11 @@ if (phpversion() < "7.4.33") {
                     foreach ($count_arr as $key => $value) {
                         #echo "<LI>$key ($value)</LI>";
                         $swap_count_arr[] = $key;
-                        $replace_count += $value;
+                        $terms_matched_count += $value;
                     }
 
                     # don't print the summary if it would be very short
-                    #if ($replace_count > 5) {
+                    #if ($terms_matched_count > 5) {
                     # don't print the summary if the number of variations is too low
                     if (count(array_keys($count_arr)) > 4) {
                         echo "<HR>";
@@ -492,11 +492,11 @@ if (phpversion() < "7.4.33") {
                         }
 
                         # If the counts gotten from above don't match the total number
-                        # of matches from the main loops we have a serious problem
-                        if ($replace_count != $total_match_count) {
-                            echo "<P class=\"debug\">ERROR<BR>Replace count does not equal total match count: R($replace_count) M($total_match_count)</P>";
-                        }
-
+                        # of replacements in HighlightBeforeStrongsNums
+                        #if ($terms_matched_count != $total_replacement_count) {
+                        #    echo "<P class=\"debug\">ERROR<BR>Terms matched count not equal to total replacement count: T($terms_matched_count) R($total_replacement_count)</P>";
+                        #}
+            
                         # print the now sorted summary out along with their counts
                         echo "<TABLE class=\"center\">";
                         echo "<tr class=\"border_bottom\"><td colspan=2 class=\"results_data aligncenter\">Summary</TD></TR>";
@@ -508,7 +508,7 @@ if (phpversion() < "7.4.33") {
                                 echo "<tr class=\"border_bottom\"><td class=\"results_data alignleft\">$key</TD><td class=\"results_data alignright\">$value</TD></TR>";
                             }
                         }
-                        echo "<tr class=\"border_bottom\"><td class=\"results_data alignleft\">Total</TD><td class=\"results_data alignright\">$replace_count</TD></TR>";
+                        echo "<tr class=\"border_bottom\"><td class=\"results_data alignleft\">Total</TD><td class=\"results_data alignright\">$terms_matched_count</TD></TR>";
                         echo "</TABLE>";
                     }
                 }
@@ -569,13 +569,13 @@ if (phpversion() < "7.4.33") {
             {
                 global $show_all_strongs;
                 global $results_table_begin;
-                global $exact_matches, $related_matches, $total_match_count, $replace_count;
+                global $exact_matches, $related_matches, $total_replacement_count, $terms_matched_count;
 
                 $line_arr = explode("|", $line);
 
                 $line_arr[1] = HighlightBeforeStrongsNums($line_arr[1], $strongs_array, $case_sensitive);
 
-                # NOTE: DO NOT CHECK ($exact_matches + $related_matches) vs $total_match_count here
+                # NOTE: DO NOT CHECK ($exact_matches + $related_matches) vs $total_replacement_count here
                 # because the number of matches for the data line can exceed the number of replacements
                 # because the highlighter will ignore matches that are already highlighted
             
@@ -645,11 +645,14 @@ if (phpversion() < "7.4.33") {
             function HighlightBeforeStrongsNums($str, $arr, $case_sensitive)
             {
                 $matches = [];
-                global $term_arr, $total_match_count;
+                global $term_arr, $total_replacement_count;
                 $hl_beg = "<SPAN class=\"highlight\">";
                 $hl_end = "</SPAN>";
                 $i = 0;
                 $replacements = 0;
+                # whether to show full phrase in the summary or only the word preceding the matched
+                # strongs num
+                $full_summary = false;
 
                 foreach ($arr as $strongs_num => $bookversesource) {
                     # capture the text before the strongs num we're looking for but stop before the first
@@ -660,7 +663,7 @@ if (phpversion() < "7.4.33") {
                     $match_count = preg_match_all("#([^}>]*?)\{$strongs_num\} \{[GH]\d{1,4}\} \{[GH]\d{1,4}\}|([^}>]*?)\{[GH]\d{1,4}\} \{$strongs_num\} \{[GH]\d{1,4}\}|([^}]*?)\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}|([^}]*?)\{$strongs_num\} \{[GH]\d{1,4}\}|([^}>]*?)\{[GH]\d{1,4}\} \{$strongs_num\}|([^}>]*?)\{$strongs_num\}#$case_sensitive", $str);
 
                     if ($match_count > 0) {
-                        #$total_match_count += $match_count;
+                        #$total_replacement_count += $match_count;
                         # remove the first element of $term_matches because it always contains
                         # the matched text (which would count it twice each round and we
                         # don't want that). subsequent elements in $term_matches are
@@ -677,22 +680,23 @@ if (phpversion() < "7.4.33") {
                                 # add the match to term_arr as many times as it appears
                                 # so it can be counted
                                 for ($i = 1; $i <= $match_count; $i++) {
+                                    if ($full_summary) {
+                                        $term_match = trim($term_match);
+                                        # remove any leading non-word character upto the first
+                                        # word character (removes leading punctuation, parenthesis, etc.)
+                                        $term_match = preg_replace("#^[^\w]+#", "", $term_match);
+                                        # full phrase
+                                        $term_arr[] = "\"$term_match\"";
+                                    } elseif ($full_summary === false) {
+                                        # remove any leading non-word character upto the first
+                                        # word character (removes leading punctuation, parenthesis, etc.)
+                                        $term_match = preg_replace("#^[^\w]+#", "", $term_match);
 
-                                    # modify the words/phrases to compress the summary more
-                                    #
-                                    # remove leading and trailing spaces
-                                    $term_match = trim($term_match);
-                                    # remove any leading non-word character upto the first
-                                    # word character (removes leading punctuation, parenthesis, etc.)
-                                    $term_match = preg_replace("#^[^\w]+#", "", $term_match);
-
-                                    # DEBUG ONLY
-                                    #if ($term_match == " unto him, If") {
-                                    #    echo "<P>STR: " . PrintHTMLtags($str) . "</P>";
-                                    #    echo "<P>STR: $str</P>";
-                                    #}
-            
-                                    $term_arr[] = $term_match;
+                                        # only the first word preceding the strongs num
+                                        $posbeg = strrpos($term_match, " ");
+                                        $term_match = substr($term_match, $posbeg);
+                                        $term_arr[] = trim($term_match);
+                                    }
                                 }
                             }
                         }
@@ -703,7 +707,7 @@ if (phpversion() < "7.4.33") {
                     # do not highlight matches that already are highlighted
                     $str = preg_replace("#([^}>]*?\{$strongs_num\} \{[GH]\d{1,4}\} \{[GH]\d{1,4}\}(?!<))|([^}>]*?\{[GH]\d{1,4}\} \{$strongs_num\} \{[GH]\d{1,4}\}(?!<))|([^}>]*?\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}(?!<))|([^}>]*?\{$strongs_num\} \{[GH]\d{1,4}\}(?!<))|([^}>]*?\{[GH]\d{1,4}\} \{$strongs_num\}(?!<))|([^}>]*?\{$strongs_num\}(?!<))#$case_sensitive", "{$hl_beg}$1$2$3$4$5$6{$hl_end}", $str, -1, $replacements);
                     #echo PrintHTMLtags($str);
-                    $total_match_count += $replacements;
+                    $total_replacement_count += $replacements;
                     #if ($replacements > 0) {
                     #    echo "<P>AFTER:<BR>" . PrintHTMLtags($str) . "</P>";
                     #}
