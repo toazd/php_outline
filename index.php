@@ -645,14 +645,18 @@ if (phpversion() < "7.4.33") {
             function HighlightBeforeStrongsNums($str, $arr, $case_sensitive)
             {
                 $matches = [];
-                global $term_arr, $total_replacement_count;
+                global $term_arr, $total_replacement_count, $search_for_strongs, $book_verse_mode;
                 $hl_beg = "<SPAN class=\"highlight\">";
                 $hl_end = "</SPAN>";
                 $i = 0;
                 $replacements = 0;
                 # whether to show full phrase in the summary or only the word preceding the matched
                 # strongs num
-                $full_summary = false;
+                if ($search_for_strongs || $book_verse_mode) {
+                    $full_summary = true;
+                } else {
+                    $full_summary = false;
+                }
 
                 foreach ($arr as $strongs_num => $bookversesource) {
                     # capture the text before the strongs num we're looking for but stop before the first
@@ -686,7 +690,7 @@ if (phpversion() < "7.4.33") {
                                         # word character (removes leading punctuation, parenthesis, etc.)
                                         $term_match = preg_replace("#^[^\w]+#", "", $term_match);
                                         # full phrase
-                                        $term_arr[] = "\"$term_match\"";
+                                        $term_arr[] = $term_match;
                                     } elseif ($full_summary === false) {
                                         # remove any leading non-word character upto the first
                                         # word character (removes leading punctuation, parenthesis, etc.)
