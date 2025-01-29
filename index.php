@@ -650,13 +650,15 @@ if (phpversion() < "7.4.33") {
                 $hl_end = "</SPAN>";
                 $i = 0;
                 $replacements = 0;
+                
                 # whether to show full phrase in the summary or only the word preceding the matched
                 # strongs num
-                if ($search_for_strongs || $book_verse_mode) {
-                    $full_summary = true;
-                } else {
-                    $full_summary = false;
-                }
+                #if ($search_for_strongs || $book_verse_mode) {
+                #    $full_summary = true;
+                #} else {
+                #    $full_summary = false;
+                #}
+                $full_summary = true;
 
                 foreach ($arr as $strongs_num => $bookversesource) {
                     # capture the text before the strongs num we're looking for but stop before the first
