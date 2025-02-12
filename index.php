@@ -650,7 +650,6 @@ if (phpversion() < "7.4.33") {
                 $hl_end = "</SPAN>";
                 $i = 0;
                 $replacements = 0;
-                
                 # whether to show full phrase in the summary or only the word preceding the matched
                 # strongs num
                 #if ($search_for_strongs || $book_verse_mode) {
@@ -950,6 +949,7 @@ if (phpversion() < "7.4.33") {
                     "ga" => "Gal",
                     "ephesians" => "Eph",
                     "ep" => "Eph",
+                    "Phil" => "Phi",
                     "Philippians" => "Phi",
                     "Colossians" => "Col",
                     "Colo" => "Col",
@@ -983,7 +983,6 @@ if (phpversion() < "7.4.33") {
                     "titus" => "Tit",
                     "ti" => "Tit",
                     "Philemon" => "Phm",
-                    "Phil" => "Phm",
                     "hebrews" => "Heb",
                     "hebrew" => "Heb",
                     "hebr" => "Heb",
