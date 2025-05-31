@@ -833,6 +833,8 @@ if (phpversion() < "7.4.33") {
                     "rt" => "Rth",
                     "1 samuel" => "1Sa",
                     "2 samuel" => "2Sa",
+                    "1 sam" => "1Sa",
+                    "2 sam" => "2Sa",
                     "1sam" => "1Sa",
                     "2sam" => "2Sa",
                     "1 kings" => "1Ki",
