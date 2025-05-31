@@ -9,9 +9,9 @@
  can get definitions more quickly without going off on time-consuming tangents that may
  cause you to lose focus on whatever you were studying.
  
- This tool significantly simplifies the process of learning how God defines His own words and
- it does so by comparing scripture to scripture. The King James version (1769) is the only
- resource used (John 6:63, 17:17, 1 Corinthians 2:13).
+ This tool significantly simplifies the process of learning at least one way that God defines
+ His own words and it does so by comparing scripture to scripture. The King James version (1769)
+ is the only resource used (John 6:63, 17:17, 1 Corinthians 2:13).
  
  If you don't believe that the King James Bible is a fulfillment of God's promise to preserve His
  word and every word of it is pure than this tool is not for you (John 8:42-47).
