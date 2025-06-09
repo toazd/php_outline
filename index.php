@@ -308,7 +308,7 @@ if (phpversion() < "7.4.33") {
 
                             # DEBUG ONLY
                             # only process specific verses
-                            #if (preg_match("#Gen 1:4#", $dataline_arr[0])) {
+                            #if (preg_match("#Zec 8:4#", $dataline_arr[0])) {
                             #echo "<P>Found $dataline_arr[0]</P>";
                             #} else {
                             #    continue;
@@ -424,7 +424,7 @@ if (phpversion() < "7.4.33") {
 
                             # DEBUG ONLY
                             # only process specific verses
-                            #if (preg_match("#Gen 1:4#", $dataline_arr[0])) {
+                            #if (preg_match("#Zec 8:4#", $dataline_arr[0])) {
                             #    echo "<P>Found $dataline_arr[0]</P>";
                             #} else {
                             #    continue;
@@ -701,11 +701,10 @@ if (phpversion() < "7.4.33") {
                 foreach ($arr as $strongs_num => $bookversesource) {
                     # capture the text before the strongs num we're looking for but stop before the first
                     # of any of the following characters }>?:,;.
-                    preg_match("#([^}>]*?)\{$strongs_num\} \{[GH]\d{1,4}\} \{[GH]\d{1,4}\}|([^}>]*?)\{[GH]\d{1,4}\} \{$strongs_num\} \{[GH]\d{1,4}\}|([^}]*?)\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}|([^}>]*?)\{$strongs_num\} \{[GH]\d{1,4}\}|([^}>]*?)\{[GH]\d{1,4}\} \{$strongs_num\}|([^}>]*?)\{$strongs_num\}#$case_sensitive", $str, $matches);
+                    $match_count = preg_match_all("#([^}>]*?)\{$strongs_num\} \{[GH]\d{1,4}\} \{[GH]\d{1,4}\}|([^}>]*?)\{[GH]\d{1,4}\} \{$strongs_num\} \{[GH]\d{1,4}\}|([^}]*?)\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}|([^}>]*?)\{$strongs_num\} \{[GH]\d{1,4}\}|([^}>]*?)\{[GH]\d{1,4}\} \{$strongs_num\}|([^}>]*?)\{$strongs_num\}#$case_sensitive", $str, $matches);
 
                     # get the total match count per verse matched
-                    $match_count = preg_match_all("#([^}>]*?)\{$strongs_num\} \{[GH]\d{1,4}\} \{[GH]\d{1,4}\}|([^}>]*?)\{[GH]\d{1,4}\} \{$strongs_num\} \{[GH]\d{1,4}\}|([^}]*?)\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}|([^}]*?)\{$strongs_num\} \{[GH]\d{1,4}\}|([^}>]*?)\{[GH]\d{1,4}\} \{$strongs_num\}|([^}>]*?)\{$strongs_num\}#$case_sensitive", $str);
-
+                    #$match_count = preg_match_all("#([^}>]*?)\{$strongs_num\} \{[GH]\d{1,4}\} \{[GH]\d{1,4}\}|([^}>]*?)\{[GH]\d{1,4}\} \{$strongs_num\} \{[GH]\d{1,4}\}|([^}]*?)\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}|([^}]*?)\{$strongs_num\} \{[GH]\d{1,4}\}|([^}>]*?)\{[GH]\d{1,4}\} \{$strongs_num\}|([^}>]*?)\{$strongs_num\}#$case_sensitive", $str);
                     if ($match_count > 0) {
                         #$total_replacement_count += $match_count;
                         # remove the first element of $term_matches because it always contains
@@ -714,16 +713,24 @@ if (phpversion() < "7.4.33") {
                         # patterned as follows:
                         # key=> the group# matched in the regex, value=>the matched text
                         unset($matches[0]);
+
+                        # DEBUG ONLY
+                        #echo "<pre>";
+                        #var_dump($match_count);
+                        #var_dump($matches);
+                        #echo "</pre>";
+            
                         # loop through the matched groups and add each one that isn't empty
                         # to the $term_array which is used to make a summary and occurance
                         # count for each match. An empty element indicates that that group
                         # did not match when not using the PREG_UNMATCHED_AS_NULL flag
-                        foreach ($matches as $term_match) {
-                            #echo "<P>Checking \"$term_match\"</P>";
-                            if ($term_match != "") {
-                                # add the match to term_arr as many times as it appears
-                                # so it can be counted
-                                for ($i = 1; $i <= $match_count; $i++) {
+                        foreach ($matches as $match_array) {
+                            foreach ($match_array as $term_match) {
+                                if ($term_match != "") {
+                                    #echo "<P>Checking \"$term_match\"</P>";
+                                    # add the match to term_arr as many times as it appears
+                                    # so it can be counted
+                                    #for ($i = 1; $i <= $match_count; $i++) {
                                     if ($full_summary) {
                                         $term_match = trim($term_match);
                                         # remove any leading non-word character upto the first
@@ -731,6 +738,11 @@ if (phpversion() < "7.4.33") {
                                         $term_match = preg_replace("#^[^\w]+#", "", $term_match);
                                         # full phrase
                                         $term_arr[] = $term_match;
+
+                                        # DEBUG ONLY
+                                        #echo "<pre>";
+                                        #var_dump($term_arr);
+                                        #echo "</pre>";
                                     } elseif ($full_summary === false) {
                                         # remove any leading non-word character upto the first
                                         # word character (removes leading punctuation, parenthesis, etc.)
@@ -741,6 +753,7 @@ if (phpversion() < "7.4.33") {
                                         $term_match = substr($term_match, $posbeg);
                                         $term_arr[] = trim($term_match);
                                     }
+                                    #}
                                 }
                             }
                         }
