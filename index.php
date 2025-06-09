@@ -14,17 +14,17 @@ mb_internal_encoding("UTF-8");
 # and supports upto 3 consecutive strongs numbers
 $bible_text = "kjvs.csv";
 
-# ensure the integrity of the data file by checking its hash
-if (hash_file("crc32", $bible_text) != "5970b308") {
-    ExitWithException("Integrity check for data file \"$bible_text\" failed.<BR>You may need to aquire an original \"$bible_text\" or reinstall this application.<BR>If you intentionally changed \$bible_text in the source code, remove this warning or update the hash value for the data file.");
-}
-
 # set to true to get the hash(s)
 if (false) {
     echo "<P>$bible_text CRC32: " . hash_file("crc32", $bible_text) . "</P>";
     #echo hash_file("crc32", "style.css") . "<BR>";
     echo "<P>Running on PHP v" . phpversion() . "</P>";
     echo "<P>" . var_dump(hash_algos()) . "</P>";
+}
+
+# ensure the integrity of the data file by checking its hash
+if (hash_file("crc32", $bible_text) != "359b6817") {
+    ExitWithException("Integrity check for data file \"$bible_text\" failed.<BR>You may need to aquire an original \"$bible_text\" or reinstall this application.<BR>If you intentionally changed \$bible_text in the source code, remove this warning or update the hash value for the data file.");
 }
 
 # ensure after each run all variables are cleared
@@ -70,8 +70,7 @@ if (phpversion() < "7.4.33") {
                 </TR>
                 <TR>
                     <TD colspan=3>
-                        <!-- autofocus has to be disabled for mobile, otherwise the slide-out keyboard
-                         is always visible -->
+                        <!-- autofocus has to be disabled for mobile, otherwise the slide-out keyboard is always visible -->
                         <INPUT type="text" inputmode="search" name="criteria" class="search_criteria" value=""
                             placeholder="type here" maxlength=255 autocomplete="off" autofocus>
                     </TD>
@@ -86,6 +85,14 @@ if (phpversion() < "7.4.33") {
                     </TD>
                     <TD>
                         <INPUT type="checkbox" name="show_all_strongs">show all strongs
+                    </TD>
+                </TR>
+                <TR>
+                    <TD>
+                        <INPUT type="checkbox" name="search_ot" checked>OT
+                    </TD>
+                    <TD>
+                        <INPUT type="checkbox" name="search_nt" checked>NT
                     </TD>
                 </TR>
                 <TR>
@@ -132,7 +139,21 @@ if (phpversion() < "7.4.33") {
                 $show_all_strongs = false;
             }
 
-            # don't bother if the submit button hasn't been pushed
+            # whether to search the OT
+            if (isset($_POST['search_ot'])) {
+                $search_ot = true;
+            } else {
+                $search_ot = false;
+            }
+
+            # whether to search the NT
+            if (isset($_POST['search_nt'])) {
+                $search_nt = true;
+            } else {
+                $search_nt = false;
+            }
+
+            # executed when submit button is pressed (or enter)
             if (isset($_POST['submit_button'])) {
 
                 # Get the text to search for from the criteria input field
@@ -148,10 +169,10 @@ if (phpversion() < "7.4.33") {
                     exit;
                 }
 
-                # ignore very common words to avoid unncessarily high processing times
+                # ignore very common words (that are by themselves) to avoid unncessarily high processing times
                 if (preg_match("#^the$|^and$|^that$|^shall$|^unto$|^for$|^his$|^her$|^they$|^him$|^not$|^them$|^with$|^all$|^thou$|^thy$|^was$|^man$|^men$|^which$|^where$|^when$|^old$#", trim($search_for))) {
                     #ExitWithException("Ignoring common word \"$search_for\" to avoid high processing times.<BR>Try entering a specific \"book chapter#:verse# $search_for\"");
-                    echo "<P class=\"debug center\">Short or common words may take a long time to process and will produce many results.</P>";
+                    echo "<P class=\"debug center\">Short or common words may take a long time to process.</P>";
                 }
 
                 # global vars
@@ -234,14 +255,32 @@ if (phpversion() < "7.4.33") {
 
                     if ($handle) {
                         $lines_checked = 0;
+
                         # get one line at a time from the file
                         while (($line = fgets($handle)) !== false) {
                             $lines_checked += 1;
-                            # don't process lines that don't contain at least a book ch#:v#|\w
+
+                            # don't process lines that don't contain at least 9 characters
                             if (mb_strlen($line) < 9) {
                                 continue;
                             }
-                            # newline characters aren't required for processing or display so we remove them
+
+                            if ($search_ot === false || $search_nt === false) {
+                                # get the bookname
+                                $line_bookname = substr($line, 0, 3);
+
+                                # if not searching the OT, skip those books
+                                if ($search_ot === false && (preg_match('/(gen|exo|lev|num|deu|jos|Jdg|rth|1sa|2sa|1ki|2ki|1ch|2ch|ezr|neh|est|job|psa|pro|ecc|son|isa|jer|lam|eze|dan|hos|joe|amo|oba|jon|mic|nah|hab|zep|hag|zec|mal)/i', $line_bookname) === 1)) {
+                                    continue;
+                                }
+
+                                # if not searching the NT, skip those books
+                                if ($search_nt === false && (preg_match('/(mat|mar|luk|joh|act|rom|1co|2co|gal|eph|phi|col|1th|2th|1ti|2ti|tit|phm|heb|jam|1pe|2pe|1jo|2jo|3jo|jud|rev)/i', $line_bookname) === 1)) {
+                                    continue;
+                                }
+                            }
+
+                            # newline characters aren't required for processing or display via HTML so remove them
                             $line = str_replace(["\r", "\n", "\r\n"], "", $line);
 
                             # only check the specific verse provided in book_verse mode
