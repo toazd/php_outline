@@ -105,20 +105,14 @@ if (phpversion() < "7.4.33") {
             # for measuring script execution time
             $start_time = microtime(true);
 
-            # warning for php versions < 7.4.33 (runs significantly slower)
-            #if (phpversion() < "7.4.33") {
-            #    echo "<P class=\"debug center\">This script runs significantly slower on PHP versions less than v7.4.33. Please consider upgrading.<BR>You are using PHP v" . phpversion() . "</P>";
-            #}
-            
             if (phpversion() < "7.4.33") {
-                echo "<P class=\"debug center\">WARNING: This script runs significantly slower on older versions of PHP<BR>Please upgrade to v7 or higher.</P>";
+                echo "<P class=\"debug center\">WARNING: This script runs significantly slower on older versions of PHP<BR>";
             }
 
             # Get option values from the checkboxes
             
-            # this variable is used in the pattern for preg_match, etc.
-            # i = true, case-insensitive
-            # "" = false, case-sensitive
+            # i = true, case-insensitive search
+            # "" = false, case-sensitive search
             if (isset($_POST['case_sensitivity'])) {
                 $case_sensitive = "";
             } else {
@@ -171,7 +165,6 @@ if (phpversion() < "7.4.33") {
 
                 # ignore very common words (that are by themselves) to avoid unncessarily high processing times
                 if (preg_match("#^the$|^and$|^that$|^shall$|^unto$|^for$|^his$|^her$|^they$|^him$|^not$|^them$|^with$|^all$|^thou$|^thy$|^was$|^man$|^men$|^which$|^where$|^when$|^old$#", trim($search_for))) {
-                    #ExitWithException("Ignoring common word \"$search_for\" to avoid high processing times.<BR>Try entering a specific \"book chapter#:verse# $search_for\"");
                     echo "<P class=\"debug center\">Short or common words may take a long time to process.</P>";
                 }
 
@@ -216,9 +209,9 @@ if (phpversion() < "7.4.33") {
                     #       string(1) "2"
                     #    [3]=> verse
                     #       string(1) "5"
-                    #    [4]=> word to find strongs for (others are ignored)
+                    #    [4]=> word to find strongs for
                     #       string(9) "perfected"
-                    #    [5]=> extra words that are ignored
+                    #    [5]=> extra words that are ignored (space delimited)
                     #  }
                     $book_verse_mode = true;
                     $bookname = TransformBookNames($matches[1]);
@@ -327,12 +320,12 @@ if (phpversion() < "7.4.33") {
                             }
 
                             # check if search_for is in the verse text
-                            # ExtractStrongsNumber handles getting the right number for the word/phrase
+                            # ExtractStrongsNumber() handles getting the right number for the word/phrase
                             if (preg_match_all($pattern, $verse_text, $match_array) !== false) {
 
                                 # hits is the number of matches per line
-                                # we need to keep track of them because ExtractStrongsNumber will
-                                # only extract one strongs num per string provided
+                                # we need to keep track of them because ExtractStrongsNumber() will
+                                # only extract one strongs num per string provided (the first encountered)
                                 $hits = count($match_array[0]);
 
                                 # if exactly one hit per line add the strongs num for it to the array
@@ -354,14 +347,14 @@ if (phpversion() < "7.4.33") {
                                         $strongs_array += ["$strongs_num" => "$book_chapter_verse"];
 
                                         # remove portion of the line that a strongs num was already added for
-                                        # add 2 to the length to include the curly brackets
+                                        # 2 is added to the length to include the curly brackets in the data file
                                         $multi_line = substr($multi_line, stripos($line, $strongs_num) + mb_strlen($strongs_num) + 2);
                                     }
                                 }
                             }
 
                             # if we found the specified verse and processed it for strongs nums
-                            # no need to check any more lines
+                            # then theres no need to check any more lines
                             if ($book_verse_mode && $specific_verse_found) {
                                 break;
                             }
@@ -370,7 +363,8 @@ if (phpversion() < "7.4.33") {
                     # close the $bible_text file
                     fclose($handle);
 
-                    #
+                    # Not really needed since we already do a hash check on the data file
+                    # but kept here as a sanity check for the number of lines processed
                     if ($book_verse_mode === false && $lines_checked != 31102) {
                         echo "<P class=\"debug center\">WARNING: \$lines_checked not equal to 31,102.<BR>If you intentionally changed \$bible_text remove this warning.</P>";
                     }
@@ -380,7 +374,7 @@ if (phpversion() < "7.4.33") {
                 # and the strongs_array is arranged as such:
                 # key(s)=strongs_num  value(s)=Book chap:verse
             
-                # don't print the report if a strongs number was searched for
+                # don't print the summary report if a strongs number was searched for
                 if ($search_for_strongs === false && count($strongs_array) > 0) {
                     # print a report of the strongs nums
                     if ($case_sensitive == "") {
@@ -393,7 +387,6 @@ if (phpversion() < "7.4.33") {
                         echo "<TR><TD class=\"strongs alignright\"><SPAN class=\"book\">$book_verse_source</SPAN></TD><TD class=\"strongs alignleft\">$strongs_num</TD></TR>";
                     }
                     echo "</TABLE><HR>";
-                    #echo "</TABLE><BR>";
                 }
 
                 #########################################################################################
@@ -408,11 +401,12 @@ if (phpversion() < "7.4.33") {
                         # get one line at a time from the file
                         while (($line = fgets($handle)) !== false) {
                             $lines_checked += 1;
-                            # don't process lines that don't contain at least a book ch#:v#|\w
+                            # don't process lines that don't contain at least 9 characters (a book ch#:v#|\w)
                             if (mb_strlen($line) < 9) {
                                 continue;
                             }
 
+                            # We don't need newline characters
                             $line = str_replace(["\r", "\n", "\r\n"], "", $line);
                             $line_already_printed = false;
                             $exact_match_found = false;
@@ -433,7 +427,6 @@ if (phpversion() < "7.4.33") {
                             if ($search_for_strongs) {
                                 if (strpos($verse_text, "{{$search_for}}") !== false) {
                                     $exact_matches += preg_match_all("#\{$search_for\}#", $verse_text);
-                                    #substr_count($verse_text, $search_for);
                                     $verses_matched += 1;
                                     PrintMatchedVerse($line, $strongs_array, false, $case_sensitive);
                                 }
@@ -470,7 +463,7 @@ if (phpversion() < "7.4.33") {
 
                                 # if an exact match is found, print it as that even if
                                 # it has related matches in it as well
-                                # DO NOT PUT "&& $related_match_found === false" here silly
+                                # DO NOT PUT "&& $related_match_found === false" here silly!!
                                 if ($exact_match_found && $show_exact_matches) {
                                     $verses_matched += 1;
                                     PrintMatchedVerse($line, $strongs_array, true, $case_sensitive);
@@ -483,12 +476,13 @@ if (phpversion() < "7.4.33") {
                     }
                     fclose($handle);
 
+                    # not necessary because of the hash check but kept as a sanity check for the processing portion
                     if ($lines_checked != 31102) {
                         echo "<P class=\"debug center\">WARNING: \$lines_checked not equal to 31,102.<BR>If you intentionally changed \$bible_text remove this warning.</P>";
                     }
                 }
 
-                # results table end
+                # print the end of the results table after all the results are printed
                 if ($exact_matches > 0 || $related_matches > 0) {
                     echo "</TABLE>";
                 }
@@ -508,7 +502,6 @@ if (phpversion() < "7.4.33") {
                     # create an array of just the values since we can't
                     # have duplicate keys (otherwise array_flip would suffice)
                     foreach ($count_arr as $key => $value) {
-                        #echo "<LI>$key ($value)</LI>";
                         $swap_count_arr[] = $key;
                         $terms_matched_count += $value;
                     }
@@ -518,8 +511,7 @@ if (phpversion() < "7.4.33") {
                     # don't print the summary if the number of variations is too low
                     if (count(array_keys($count_arr)) > 4) {
                         echo "<HR>";
-                        #echo "<BR>";
-            
+
                         # sort the new array alphabetically, case-insensitive
                         sort($swap_count_arr, SORT_NATURAL | SORT_FLAG_CASE);
 
@@ -530,24 +522,18 @@ if (phpversion() < "7.4.33") {
                             $sorted_arr[$value] = $count_arr[$value];
                         }
 
-                        # If the counts gotten from above don't match the total number
-                        # of replacements in HighlightBeforeStrongsNums
-                        #if ($terms_matched_count != $total_replacement_count) {
-                        #    echo "<P class=\"debug\">ERROR<BR>Terms matched count not equal to total replacement count: T($terms_matched_count) R($total_replacement_count)</P>";
-                        #}
-            
                         # print the now sorted summary out along with their counts
                         echo "<TABLE class=\"center\">";
                         echo "<tr class=\"border_bottom\"><td colspan=2 class=\"results_data aligncenter\">Summary</TD></TR>";
                         foreach ($sorted_arr as $key => $value) {
-                            # change color for exact matches
+                            # use a different color for exact matches
                             if (preg_match("#{$search_for}$#$case_sensitive", $key)) {
                                 echo "<tr class=\"border_bottom\"><td class=\"results_data alignleft exact_match\">$key</TD><td class=\"results_data alignright\">$value</TD></TR>";
                             } else {
                                 echo "<tr class=\"border_bottom\"><td class=\"results_data alignleft\">$key</TD><td class=\"results_data alignright\">$value</TD></TR>";
                             }
                         }
-                        echo "<tr class=\"border_bottom\"><td class=\"results_data alignleft\">Total</TD><td class=\"results_data alignright\">$terms_matched_count</TD></TR>";
+                        echo "<TR class=\"border_bottom\"><td class=\"results_data alignleft\">Total</TD><td class=\"results_data alignright\">$terms_matched_count</TD></TR>";
                         echo "</TABLE>";
                     }
                 }
@@ -618,8 +604,8 @@ if (phpversion() < "7.4.33") {
                 # because the number of matches for the data line can exceed the number of replacements
                 # because the highlighter will ignore matches that are already highlighted
             
+                # whether to show all available strongs nums or only those for related matches
                 if ($show_all_strongs) {
-                    #$line_arr[1] = StripStrongsNumsButExclude($line_arr[1], $strongs_array);
                     # strongs nums shown in superscript
                     $line_arr[1] = preg_replace("#\{([GH]\d{1,4})\}#", "<sup class=\"strongs\">" . "$1" . "</sup>", $line_arr[1]);
                 } elseif ($show_all_strongs === false) {
@@ -637,12 +623,7 @@ if (phpversion() < "7.4.33") {
                 # Fix for highlights right against eachother
                 $line_arr[1] = str_ireplace("<SPAN class=\"highlight\"> ", " <SPAN class=\"highlight\">", $line_arr[1]);
 
-                # DEBUG ONLY
-                #if (preg_match("#Gen 1:4#", $line_arr[0])) {
-                #    echo PrintHTMLtags($line_arr[1]);
-                #}
-            
-                # exact match lines are shown in a different color to easily differentiate them
+                # exact matches are shown in a different color to more easily differentiate them from related matches
                 if ($exact_match) {
                     echo "<tr class=\"results border_top\"><td class=\"nowrap align_center results_data\"><SPAN class=\"book\">$line_arr[0]</SPAN></TD><td class=\"increase_line_height align_center results_data\"><SPAN class=\"exact_match\">$line_arr[1]</SPAN></TD></TR>";
                 } elseif ($exact_match === false) {
@@ -661,10 +642,6 @@ if (phpversion() < "7.4.33") {
             # Strip all the strongs nums from a data line
             function StripStrongsNums($str)
             {
-                #$debugstr = str_replace("<", "&lt;", $str);
-                #$debugstr = str_replace(">", "&gt;", $debugstr);
-                #echo "<P>StripStrongsNums_STR: \"$debugstr\"</P>";
-            
                 # remove the extra space between strongs nums that are next to eachother and separated by
                 # a space, that are not inside of the first set of <SPAN class="highlight"> </SPAN> tags
                 # otherwise, when the strongs nums are removed an extra space will appear in the result
@@ -689,13 +666,9 @@ if (phpversion() < "7.4.33") {
                 $hl_end = "</SPAN>";
                 $i = 0;
                 $replacements = 0;
-                # whether to show full phrase in the summary or only the word preceding the matched
-                # strongs num
-                #if ($search_for_strongs || $book_verse_mode) {
-                #    $full_summary = true;
-                #} else {
-                #    $full_summary = false;
-                #}
+
+                # whether to show full phrase in the summary or only the word preceding the matched strongs num
+                # this is a "hidden" option because it may subtract too much context
                 $full_summary = true;
 
                 foreach ($arr as $strongs_num => $bookversesource) {
@@ -703,10 +676,7 @@ if (phpversion() < "7.4.33") {
                     # of any of the following characters }>?:,;.
                     $match_count = preg_match_all("#([^}>]*?)\{$strongs_num\} \{[GH]\d{1,4}\} \{[GH]\d{1,4}\}|([^}>]*?)\{[GH]\d{1,4}\} \{$strongs_num\} \{[GH]\d{1,4}\}|([^}]*?)\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}|([^}>]*?)\{$strongs_num\} \{[GH]\d{1,4}\}|([^}>]*?)\{[GH]\d{1,4}\} \{$strongs_num\}|([^}>]*?)\{$strongs_num\}#$case_sensitive", $str, $matches);
 
-                    # get the total match count per verse matched
-                    #$match_count = preg_match_all("#([^}>]*?)\{$strongs_num\} \{[GH]\d{1,4}\} \{[GH]\d{1,4}\}|([^}>]*?)\{[GH]\d{1,4}\} \{$strongs_num\} \{[GH]\d{1,4}\}|([^}]*?)\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}|([^}]*?)\{$strongs_num\} \{[GH]\d{1,4}\}|([^}>]*?)\{[GH]\d{1,4}\} \{$strongs_num\}|([^}>]*?)\{$strongs_num\}#$case_sensitive", $str);
                     if ($match_count > 0) {
-                        #$total_replacement_count += $match_count;
                         # remove the first element of $term_matches because it always contains
                         # the matched text (which would count it twice each round and we
                         # don't want that). subsequent elements in $term_matches are
@@ -714,35 +684,21 @@ if (phpversion() < "7.4.33") {
                         # key=> the group# matched in the regex, value=>the matched text
                         unset($matches[0]);
 
-                        # DEBUG ONLY
-                        #echo "<pre>";
-                        #var_dump($match_count);
-                        #var_dump($matches);
-                        #echo "</pre>";
-            
                         # loop through the matched groups and add each one that isn't empty
                         # to the $term_array which is used to make a summary and occurance
-                        # count for each match. An empty element indicates that that group
+                        # count for each match. An empty string element indicates that that matching group
                         # did not match when not using the PREG_UNMATCHED_AS_NULL flag
                         foreach ($matches as $match_array) {
                             foreach ($match_array as $term_match) {
                                 if ($term_match != "") {
-                                    #echo "<P>Checking \"$term_match\"</P>";
-                                    # add the match to term_arr as many times as it appears
-                                    # so it can be counted
-                                    #for ($i = 1; $i <= $match_count; $i++) {
                                     if ($full_summary) {
                                         $term_match = trim($term_match);
                                         # remove any leading non-word character upto the first
                                         # word character (removes leading punctuation, parenthesis, etc.)
+                                        # this helps to compress the summary without subtracting context
                                         $term_match = preg_replace("#^[^\w]+#", "", $term_match);
                                         # full phrase
                                         $term_arr[] = $term_match;
-
-                                        # DEBUG ONLY
-                                        #echo "<pre>";
-                                        #var_dump($term_arr);
-                                        #echo "</pre>";
                                     } elseif ($full_summary === false) {
                                         # remove any leading non-word character upto the first
                                         # word character (removes leading punctuation, parenthesis, etc.)
@@ -753,21 +709,15 @@ if (phpversion() < "7.4.33") {
                                         $term_match = substr($term_match, $posbeg);
                                         $term_arr[] = trim($term_match);
                                     }
-                                    #}
                                 }
                             }
                         }
                     }
 
-                    #echo "<P>Highlighting: \"$term_match\" and \"$strongs_num\"</P>";
                     # surround the terms captured + the strongs nums with the html tags to highlight them
-                    # do not highlight matches that already are highlighted
+                    # do not highlight matches that are already highlighted
                     $str = preg_replace("#([^}>]*?\{$strongs_num\} \{[GH]\d{1,4}\} \{[GH]\d{1,4}\}(?!<))|([^}>]*?\{[GH]\d{1,4}\} \{$strongs_num\} \{[GH]\d{1,4}\}(?!<))|([^}>]*?\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}(?!<))|([^}>]*?\{$strongs_num\} \{[GH]\d{1,4}\}(?!<))|([^}>]*?\{[GH]\d{1,4}\} \{$strongs_num\}(?!<))|([^}>]*?\{$strongs_num\}(?!<))#$case_sensitive", "{$hl_beg}$1$2$3$4$5$6{$hl_end}", $str, -1, $replacements);
-                    #echo PrintHTMLtags($str);
                     $total_replacement_count += $replacements;
-                    #if ($replacements > 0) {
-                    #    echo "<P>AFTER:<BR>" . PrintHTMLtags($str) . "</P>";
-                    #}
                 }
                 return $str;
             }
@@ -802,7 +752,6 @@ if (phpversion() < "7.4.33") {
                                 if (preg_match("#\{[GH]\d{1,4}\}#", $line)) {
                                     # break on the next go round to put the offset in skipterm
                                     $break_next = true;
-                                    #echo "<P>SValue: \"$value\"</P>";
                                 }
                             }
                         }
@@ -821,7 +770,6 @@ if (phpversion() < "7.4.33") {
                     # grab the nearest strongs num to the right of search_for
                     # if search_for is within a phrase and not next to it
                     $trimmed = substr($line, stripos($line, $search_for) + mb_strlen($search_for));
-                    #echo "<P>Trimmed: \"$trimmed\"</P>";
                     $startpos = strpos($trimmed, "{");
                     $endpos = strpos($trimmed, "}", $startpos);
                     $strongs = substr($trimmed, $startpos + 1, ($endpos - $startpos) - 1);
@@ -860,7 +808,6 @@ if (phpversion() < "7.4.33") {
             # transform booknames to match those of the data file
             function TransformBookNames($string_to_check)
             {
-                #echo "<P>BEFORE: $string_to_check</P>";
                 $string_to_check = trim($string_to_check);
                 $abbrev_booknames = array(
                     "genesis" => "Gen",
@@ -932,9 +879,12 @@ if (phpversion() < "7.4.33") {
                     "song of solomon" => "Son",
                     "canticles" => "Son",
                     "canticle" => "Son",
+                    "cant" => "Son",
                     "song" => "Son",
+                    "sos" => "Son",
                     "isaiah" => "Isa",
                     "esaias" => "Isa",
+                    "jerimiah" => "Jer",
                     "jeremiah" => "Jer",
                     "jere" => "Jer",
                     "lamentations" => "Lam",
@@ -1080,9 +1030,7 @@ if (phpversion() < "7.4.33") {
                 # Check if the search string begins with any of the supported abbreviated
                 # book names and replace it if found
                 foreach ($abbrev_booknames as $key => $value) {
-                    #echo "<P>Checking \"$string_to_check\" against \"$key\"</P>";
                     if (substr_compare($string_to_check, $key, 0, strlen($key), true) == 0) {
-                        #echo "<P>Transform_string_to_check: \"$string_to_check\"</P>";
                         $string_to_check = preg_replace("/\b$key\b/i", $value, $string_to_check, 1);
                         break;
                     }
@@ -1091,7 +1039,6 @@ if (phpversion() < "7.4.33") {
                 # uniform capitalization
                 $string_to_check = strtolower($string_to_check);
                 $string_to_check = ucfirst($string_to_check);
-                #echo "<P>AFTER: $string_to_check</P>";
                 return $string_to_check;
             }
 
@@ -1110,8 +1057,7 @@ if (phpversion() < "7.4.33") {
     <!-- Return to top button anchor -->
     <A href="#" class="scrollbutton" id="scrollbuttonid">↑</a>
 
-    <!-- Javacript enable the return-to-top button to appear only after scrolling down a little
-    -->
+    <!-- Enable the return-to-top button to appear only after scrolling down a little -->
     <SCRIPT>
         let upBtn = document.getElementById("scrollbuttonid");
 
@@ -1143,8 +1089,7 @@ if (phpversion() < "7.4.33") {
         </UL>
     </BUTTON>
 
-    <!-- Javascript to "open" the help button when the button is clicked
-    -->
+    <!-- Javascript to "open" the help button when the button is clicked -->
     <SCRIPT>
         function openHelp() {
             document.getElementById("close-button").style.display = "block";
