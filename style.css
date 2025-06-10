@@ -1,3 +1,5 @@
+/* easy to read san-serif font
+liberation sans is another good option */
 @font-face {
     font-family: "Outfit";
     src: url('fonts/Outfit-VariableFont_wght.ttf');
@@ -6,27 +8,73 @@
     font-display: swap;
 }
 
+/* old style serif but still easy to read
+this font was custom made by running
+https://fonts.google.com/specimen/Gabriela
+through the nerd font processor (so it supports
+a wide variety of glyphs) */
+@font-face {
+    font-family: "Gabriela";
+    src: url('fonts/GabrielaNerdFont-Regular.ttf');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+/* fancy gothic font
+https://www.dafont.com/black-chancery.font */
+@font-face {
+    font-family: "BlackChancery";
+    src: url('fonts/BlackChancery.ttf');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+/* included with Bibleanalyzer for properly
+displaying greek characters */
+@font-face {
+    font-family: "Greek";
+    src: url('fonts/GalaxieUnicodeGreek.ttf');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+/* included with Bibleanalyzer for properly
+displaying hebrew characters */
+@font-face {
+    font-family: "Hebrew";
+    src: url('fonts/GalaxieUnicodeHebrew.ttf');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
 html * {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Gabriela', sans-serif;
     font-weight: 400;
     font-style: normal;
     font-size: 18px;
 }
 
+.main_title {
+    font-family: 'BlackChancery', 'Gabriela', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 24px;
+    padding: 5px;
+}
+
 body {
-    /*background-image: url("paper-antique-seamless.jpg");*/
     background-repeat: repeat;
-    /*background-size: 100% auto;*/
     background-color: #e9d7ad;
-    /* #EBDBB7 */
     color: #000000;
     display: grid;
     grid-template-columns: auto 0px;
 }
 
 .search_form {
-    /*background-image: url("paper-antique-seamless.jpg");*/
-    /*background-blend-mode: darken;*/
     margin-left: 3%;
     margin-right: 3%;
     margin-top: 0%;
@@ -39,35 +87,6 @@ body {
     border-radius: 25px;
     background-color: #e9d7ad;
 }
-
-/*
-.tooltip {
-    position: relative;
-    display: inline-block;
-    border-bottom: 0px dashed black;
-}
-
-.tooltip .tooltiptext {
-    visibility: hidden;
-    background-color: #e9d7ad;
-    color: #000000;
-    text-align: center;
-    border-radius: 16px;
-    padding-left: 5px;
-    padding-right: 5px;
-    padding-top: 0px;
-    padding-bottom: 0px;
-    border: 1px solid black;
-
-    position: absolute;
-    z-index: 1;
-    bottom: 110%;
-}
-
-.tooltip:hover .tooltiptext {
-    visibility: visible;
-}
-*/
 
 p {
     text-align: left;
@@ -143,10 +162,9 @@ input.search_criteria:focus {
 }
 
 span.highlight {
-    /*background-color: rgba(247, 243, 5, 1);*/
     background-color: rgb(255, 251, 0);
     border-left: 1px solid #d8c79d;
-    border-right:  1px solid #d8c79d;
+    border-right: 1px solid #d8c79d;
     border-top: 1px solid #d8c79d;
     border-bottom: 1px solid #d8c79d;
 
@@ -166,21 +184,6 @@ a {
     text-decoration: none;
     color: black;
 }
-
-/*a.top {
-    text-decoration: none;
-    padding: 10px;
-    color: #000;
-    background: #fff;
-    border-radius: 50px;
-    position: sticky;
-    bottom: 10px;
-    place-self: end;
-    margin-top: 100vh;
-    white-space: nowrap;
-    font-size: 24px;
-}
-*/
 
 a.top {
     width: 50px;
@@ -225,7 +228,6 @@ td {
 }
 
 td.strongs {
-    /*text-align: center;*/
     vertical-align: middle;
     padding-top: 0px;
     padding-bottom: 0px;

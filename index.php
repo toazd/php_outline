@@ -64,8 +64,8 @@ if (phpversion() < "7.4.33") {
         <FORM action="" method="post" class="search_form" enctype="text/plain accept-charset=UTF-8">
             <TABLE class="center">
                 <TR>
-                    <TD colspan=3>
-                        <A href="<?php echo $_SERVER["REQUEST_URI"]; ?>" class="largefont">Outline of Biblical usage</a>
+                    <TD colspan=3 class="main_title">
+                        <A href="<?php echo $_SERVER["REQUEST_URI"]; ?>" class="main_title">Outline of Biblical usage</a>
                     </TD>
                 </TR>
                 <TR>
@@ -378,7 +378,7 @@ if (phpversion() < "7.4.33") {
                 if ($search_for_strongs === false && count($strongs_array) > 0) {
                     # print a report of the strongs nums
                     if ($case_sensitive == "") {
-                        echo "<P class=\"underline center\">Strongs numbers associated with \"$search_for\"</P><BR>(case-sensitive)";
+                        echo "<P class=\"underline center\">Strongs numbers associated with \"$search_for\" (case-sensitive)</P>";
                     } elseif ($case_sensitive == "i") {
                         echo "<P class=\"underline center\">Strongs numbers associated with \"$search_for\"</P>";
                     }
