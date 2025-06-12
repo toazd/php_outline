@@ -523,7 +523,7 @@ if (phpversion() < "7.4.33") {
                     # don't print the summary if it would be very short
                     #if ($terms_matched_count > 5) {
                     # don't print the summary if the number of variations is too low
-                    if (count(array_keys($count_arr)) > 4) {
+                    if (count(array_keys($count_arr)) > 1) {
                         echo "<HR>";
 
                         # sort the new array alphabetically, case-insensitive
