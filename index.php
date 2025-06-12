@@ -65,7 +65,8 @@ if (phpversion() < "7.4.33") {
             <TABLE class="center">
                 <TR>
                     <TD colspan=3 class="main_title">
-                        <A href="<?php echo $_SERVER["REQUEST_URI"]; ?>" class="main_title">Outline of Biblical usage</a>
+                        <A href="<?php echo $_SERVER["REQUEST_URI"]; ?>" class="main_title">Outline of Biblical
+                            usage</a>
                     </TD>
                 </TR>
                 <TR>
@@ -89,10 +90,13 @@ if (phpversion() < "7.4.33") {
                 </TR>
                 <TR>
                     <TD>
-                        <INPUT type="checkbox" name="search_ot" checked>OT
+                        <INPUT type="checkbox" name="search_ot" checked>search OT
                     </TD>
                     <TD>
-                        <INPUT type="checkbox" name="search_nt" checked>NT
+                        <INPUT type="checkbox" name="search_nt" checked>search NT
+                    </TD>
+                    <TD>
+                        <INPUT type="checkbox" name="full_summary">full summary
                     </TD>
                 </TR>
                 <TR>
@@ -145,6 +149,16 @@ if (phpversion() < "7.4.33") {
                 $search_nt = true;
             } else {
                 $search_nt = false;
+            }
+
+            # whether to show the full phrase in the summary after the results or a specified number of words
+            if (isset($_POST['full_summary'])) {
+                $full_summary = true;
+            } else {
+                $full_summary = false;
+                # if $full_summary is false, leave up to this many words preceding the matched strongs num
+                # currently supports 1-3, else full summary is shown
+                $preceding_words = 1;
             }
 
             # executed when submit button is pressed (or enter)
@@ -661,15 +675,11 @@ if (phpversion() < "7.4.33") {
             function HighlightBeforeStrongsNums($str, $arr, $case_sensitive)
             {
                 $matches = [];
-                global $term_arr, $total_replacement_count, $search_for_strongs, $book_verse_mode;
+                global $term_arr, $total_replacement_count, $search_for_strongs, $book_verse_mode, $full_summary, $preceding_words;
                 $hl_beg = "<SPAN class=\"highlight\">";
                 $hl_end = "</SPAN>";
                 $i = 0;
                 $replacements = 0;
-
-                # whether to show full phrase in the summary or only the word preceding the matched strongs num
-                # this is a "hidden" option because it may subtract too much context
-                $full_summary = true;
 
                 foreach ($arr as $strongs_num => $bookversesource) {
                     # capture the text before the strongs num we're looking for but stop before the first
@@ -704,9 +714,46 @@ if (phpversion() < "7.4.33") {
                                         # word character (removes leading punctuation, parenthesis, etc.)
                                         $term_match = preg_replace("#^[^\w]+#", "", $term_match);
 
-                                        # only the first word preceding the strongs num
-                                        $posbeg = strrpos($term_match, " ");
-                                        $term_match = substr($term_match, $posbeg);
+                                        switch ($preceding_words) {
+                                            # leave up to three words preceding the strongs num
+                                            case 3:
+                                                $pos_firstspace = strrpos($term_match, " ");
+                                                if ($pos_firstspace !== false) {
+                                                    $pos_secondspace = strrpos($term_match, " ", -(strlen($term_match) - $pos_firstspace + 1));
+                                                    if ($pos_secondspace !== false) {
+                                                        $pos_thirdspace = strrpos($term_match, " ", -(strlen($term_match) - $pos_secondspace + 1));
+                                                        $term_match = substr($term_match, $pos_thirdspace);
+                                                    } else {
+                                                        $term_match = substr($term_match, $pos_secondspace);
+                                                    }
+                                                } else {
+                                                    $pos_firstspace = 0;
+                                                }
+                                                break;
+                                            # leave up to two words preceding the strongs num
+                                            case 2:
+                                                $pos_firstspace = strrpos($term_match, " ");
+                                                if ($pos_firstspace !== false) {
+                                                    $pos_secondspace = strrpos($term_match, " ", -(strlen($term_match) - $pos_firstspace + 1));
+                                                    if ($pos_secondspace !== false) {
+                                                        $term_match = substr($term_match, $pos_secondspace);
+                                                    } else {
+                                                        $term_match = substr($term_match, $pos_firstspace);
+                                                    }
+                                                } else {
+                                                    $pos_firstspace = 0;
+                                                }
+                                                break;
+                                            # leave only the first word preceding the strongs num
+                                            case 1:
+                                                $pos_firstspace = strrpos($term_match, " ");
+                                                if ($pos_firstspace !== false) {
+                                                    $term_match = substr($term_match, $pos_firstspace);
+                                                } else {
+                                                    $pos_firstspace = 0;
+                                                }
+                                                break;
+                                        }
                                         $term_arr[] = trim($term_match);
                                     }
                                 }
