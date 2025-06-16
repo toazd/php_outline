@@ -1,4 +1,4 @@
- Use the Bible to easily find definitions of words used in the Bible.Add commentMore actions
+ Use the Bible to easily find definitions of words used in the Bible.
 
  Ever wonder what God meant when He used a certain word? How can we know with certainty
  that a definition is the truth? Easy: we use God's word to define God's words. But,
