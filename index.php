@@ -23,7 +23,7 @@ if (false) {
 }
 
 # ensure the integrity of the data file by checking its hash
-if (hash_file("crc32", $bible_text) != "359b6817") {
+if (hash_file("crc32", $bible_text) != "a6b63118") {
     ExitWithException("Integrity check for data file \"$bible_text\" failed.<BR>You may need to aquire an original \"$bible_text\" or reinstall this application.<BR>If you intentionally changed \$bible_text in the source code, remove this warning or update the hash value for the data file.");
 }
 
@@ -101,6 +101,11 @@ if (phpversion() < "7.4.33") {
                 </TR>
                 <TR>
                     <TD colspan=3>
+                        <INPUT type="checkbox" name="exact_match_only">exact word match only
+                    </TD>
+                </TR>
+                <TR>
+                    <TD colspan=3>
                         <INPUT type="submit" name="submit_button" class="submit_button" value="Search">
                     </TD>
                 </TR>
@@ -151,6 +156,13 @@ if (phpversion() < "7.4.33") {
                 $search_nt = false;
             }
 
+            # only show results that match the entered word exactly
+            if (isset($_POST['exact_match_only'])) {
+                $exact_match_only = true;
+            } else {
+                $exact_match_only = false;
+            }
+
             # whether to show the full phrase in the summary after the results or a specified number of words
             if (isset($_POST['full_summary'])) {
                 $full_summary = true;
@@ -173,8 +185,10 @@ if (phpversion() < "7.4.33") {
 
                 # if the search criteria is too short, display an error and don't do anything
                 if (mb_strlen(trim($search_for)) <= 2) {
-                    echo "<P class=\"debug center\">Search criteria \"$search_for\" is too short.<P>";
-                    exit;
+                    if (preg_match('#[hHgG]#i', substr($search_for, 0, 1)) !== 1) {
+                        echo "<P class=\"debug center\">Search criteria \"$search_for\" is too short.<P>";
+                        exit;
+                    }
                 }
 
                 # ignore very common words (that are by themselves) to avoid unncessarily high processing times
@@ -237,7 +251,7 @@ if (phpversion() < "7.4.33") {
 
                     # show a warning if extra words were supplied beyond the first
                     if (array_key_exists(5, $matches) && $matches[5] != "") {
-                        echo "<P class=\"center debug\">Ignoring extra words:<BR>\"$matches[5]\"</P>";
+                        echo "<P class=\"center debug\">Ignoring extra characters: \"$matches[5]\"</P>";
                     }
 
                 } elseif (preg_match("#^(\d?[ ]?\w+?)[ ]?(\d{1,3}):(\d{1,3})$#", $search_for)) {
@@ -389,6 +403,7 @@ if (phpversion() < "7.4.33") {
                 # key(s)=strongs_num  value(s)=Book chap:verse
             
                 # don't print the summary report if a strongs number was searched for
+                # or if we're only showing results for exact matches
                 if ($search_for_strongs === false && count($strongs_array) > 0) {
                     # print a report of the strongs nums
                     if ($case_sensitive == "") {
@@ -400,7 +415,7 @@ if (phpversion() < "7.4.33") {
                     foreach ((array) $strongs_array as $strongs_num => $book_verse_source) {
                         echo "<TR><TD class=\"strongs alignright\"><SPAN class=\"book\">$book_verse_source</SPAN></TD><TD class=\"strongs alignleft\">$strongs_num</TD></TR>";
                     }
-                    echo "</TABLE><HR>";
+                    echo "</TABLE><BR>";
                 }
 
                 #########################################################################################
@@ -459,18 +474,22 @@ if (phpversion() < "7.4.33") {
                                         $exact_found = preg_match_all("#\b$search_for\{$strongs_num\}|\b$search_for\{[GH]\d{1,4}\} \{$strongs_num\}|\b$search_for\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}#$case_sensitive", $verse_text);
                                         $exact_matches += $exact_found;
 
-                                        $related_found = preg_match_all("#(?<!\b$search_for|} )\{$strongs_num\}|(?<!\b$search_for|} )\{[GH]\d{1,4}\} \{$strongs_num\}|(?<!\b$search_for|} )\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}#$case_sensitive", $verse_text);
-                                        $related_matches += $related_found;
+                                        if ($exact_match_only === false) {
+                                            $related_found = preg_match_all("#(?<!\b$search_for|} )\{$strongs_num\}|(?<!\b$search_for|} )\{[GH]\d{1,4}\} \{$strongs_num\}|(?<!\b$search_for|} )\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}#$case_sensitive", $verse_text);
+                                            $related_matches += $related_found;
+                                        }
 
                                         # related matches
                                     } else {
-                                        if (preg_match("#(?<!\b$search_for|} )\{$strongs_num\}|(?<!\b$search_for|} )\{[GH]\d{1,4}\} \{$strongs_num\}|(?<!\b$search_for|} )\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}#$case_sensitive", $verse_text)) {
-                                            $related_match_found = true;
-                                            # count the related matches only because if there were
-                                            # any exact matches they would have been counted above
-                                            # and this else block is skipped
-                                            $related_found = preg_match_all("#(?<!\b$search_for|} )\{$strongs_num\}|(?<!\b$search_for|} )\{[GH]\d{1,4}\} \{$strongs_num\}|(?<!\b$search_for|} )\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}#$case_sensitive", $verse_text);
-                                            $related_matches += $related_found;
+                                        if ($exact_match_only === false) {
+                                            if (preg_match("#(?<!\b$search_for|} )\{$strongs_num\}|(?<!\b$search_for|} )\{[GH]\d{1,4}\} \{$strongs_num\}|(?<!\b$search_for|} )\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}#$case_sensitive", $verse_text)) {
+                                                $related_match_found = true;
+                                                # count the related matches only because if there were
+                                                # any exact matches they would have been counted above
+                                                # and this else block is skipped
+                                                $related_found = preg_match_all("#(?<!\b$search_for|} )\{$strongs_num\}|(?<!\b$search_for|} )\{[GH]\d{1,4}\} \{$strongs_num\}|(?<!\b$search_for|} )\{[GH]\d{1,4}\} \{[GH]\d{1,4}\} \{$strongs_num\}#$case_sensitive", $verse_text);
+                                                $related_matches += $related_found;
+                                            }
                                         }
                                     }
                                 }
@@ -501,58 +520,64 @@ if (phpversion() < "7.4.33") {
                     echo "</TABLE>";
                 }
 
-                # summary of words/phrases for matched strongs nums, sorted alphabetically,
-                # case-insensitive with duplicates removed and the occurance counts included
-                # with each unique word/phrase matched
-                # NOTE: array sorting is based on the values so we cannot simply sort() and array_flip()
-                $swap_count_arr = [];
-                $sorted_arr = [];
-                $terms_matched_count = 0;
-                if (count($term_arr) > 0) {
+                if ($exact_match_only === false) {
+                    # summary of words/phrases for matched strongs nums, sorted alphabetically,
+                    # case-insensitive with duplicates removed and the occurance counts included
+                    # with each unique word/phrase matched
+                    # NOTE: array sorting is based on the values so we cannot simply sort() and array_flip()
+                    $swap_count_arr = [];
+                    $sorted_arr = [];
+                    $terms_matched_count = 0;
+                    if (count($term_arr) > 0) {
 
-                    # get a count for how many of each word/phrase occurs
-                    $count_arr = array_count_values($term_arr);
-
-                    # create an array of just the values since we can't
-                    # have duplicate keys (otherwise array_flip would suffice)
-                    foreach ($count_arr as $key => $value) {
-                        $swap_count_arr[] = $key;
-                        $terms_matched_count += $value;
-                    }
-
-                    # don't print the summary if it would be very short
-                    #if ($terms_matched_count > 5) {
-                    # don't print the summary if the number of variations is too low
-                    if (count(array_keys($count_arr)) > 1) {
                         echo "<HR>";
 
-                        # sort the new array alphabetically, case-insensitive
-                        sort($swap_count_arr, SORT_NATURAL | SORT_FLAG_CASE);
+                        # get a count for how many of each word/phrase occurs
+                        $count_arr = array_count_values($term_arr);
 
-                        # loop through the array of just values and create a new
-                        # associative array using the values as keys and matching
-                        # the counts up with each key from the count_arr
-                        foreach ($swap_count_arr as $value) {
-                            $sorted_arr[$value] = $count_arr[$value];
+                        # create an array of just the values since we can't
+                        # have duplicate keys (otherwise array_flip would suffice)
+                        foreach ($count_arr as $key => $value) {
+                            $swap_count_arr[] = $key;
+                            $terms_matched_count += $value;
                         }
 
-                        # print the now sorted summary out along with their counts
-                        echo "<TABLE class=\"center\">";
-                        echo "<tr class=\"border_bottom\"><td colspan=2 class=\"results_data aligncenter\">Summary</TD></TR>";
-                        foreach ($sorted_arr as $key => $value) {
-                            # use a different color for exact matches
-                            if (preg_match("#{$search_for}$#$case_sensitive", $key)) {
-                                echo "<tr class=\"border_bottom\"><td class=\"results_data alignleft exact_match\">$key</TD><td class=\"results_data alignright\">$value</TD></TR>";
-                            } else {
-                                echo "<tr class=\"border_bottom\"><td class=\"results_data alignleft\">$key</TD><td class=\"results_data alignright\">$value</TD></TR>";
+                        # don't print the summary if it would be very short
+                        #if ($terms_matched_count > 5) {
+                        # don't print the summary if the number of variations is too low
+                        if (count(array_keys($count_arr)) > 1) {
+
+                            # sort the new array alphabetically, case-insensitive
+                            sort($swap_count_arr, SORT_NATURAL | SORT_FLAG_CASE);
+
+                            # loop through the array of just values and create a new
+                            # associative array using the values as keys and matching
+                            # the counts up with each key from the count_arr
+                            foreach ($swap_count_arr as $value) {
+                                $sorted_arr[$value] = $count_arr[$value];
                             }
+
+                            # print the now sorted summary out along with their counts
+                            echo "<TABLE class=\"center\">";
+                            echo "<tr class=\"border_bottom\"><td colspan=2 class=\"results_data aligncenter\">Summary</TD></TR>";
+                            foreach ($sorted_arr as $key => $value) {
+                                # use a different color for exact matches
+                                if (preg_match("#{$search_for}$#$case_sensitive", $key)) {
+                                    echo "<tr class=\"border_bottom\"><td class=\"results_data alignleft exact_match\">$key</TD><td class=\"results_data alignright\">$value</TD></TR>";
+                                } else {
+                                    echo "<tr class=\"border_bottom\"><td class=\"results_data alignleft\">$key</TD><td class=\"results_data alignright\">$value</TD></TR>";
+                                }
+                            }
+                            echo "<TR class=\"border_bottom\"><td class=\"results_data alignleft\">Total</TD><td class=\"results_data alignright\">$terms_matched_count</TD></TR>";
+                            echo "</TABLE>";
                         }
-                        echo "<TR class=\"border_bottom\"><td class=\"results_data alignleft\">Total</TD><td class=\"results_data alignright\">$terms_matched_count</TD></TR>";
-                        echo "</TABLE>";
                     }
+
+                    # hr before summary of counts and time taken
+            
                 }
 
-                # hr before summary of counts and time taken
+                # display a horizontal rule after the results and before the results summary
                 echo "<HR>";
 
                 # singular or plural results
@@ -590,7 +615,9 @@ if (phpversion() < "7.4.33") {
                 }
 
                 if ($search_for_strongs === false) {
-                    echo "<P class=\"center\">$related_matches related $related_match_text found</P>";
+                    if ($exact_match_only === false) {
+                        echo "<P class=\"center\">$related_matches related $related_match_text found</P>";
+                    }
                     echo "<P class=\"center\">" . ($exact_matches + $related_matches) . " total $total_match_text in $verses_matched $verses_matched_text</P>";
                 }
 
