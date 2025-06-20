@@ -23,5 +23,5 @@
  such as from the context itself.
 
  Technical requirements:
- - Requires the PHP extension mbstring to be enabled (php.ini)
+ - Requires the PHP extension mbstring to be enabled (edit `php.ini` on Windows or `sudo apt install -y php-mbstring` on Ubuntu based distros)
  - Requires a web server with PHP or PHP desktop (chrome): https://github.com/cztomczak/phpdesktop
