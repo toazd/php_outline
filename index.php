@@ -184,7 +184,7 @@ if (phpversion() < "7.4.33") {
                 $search_for = preg_replace("#[^\w:\d ]+#", "", $search_for);
 
                 # if the search criteria is too short, display an error and don't do anything
-                if (mb_strlen(trim($search_for)) <= 2) {
+                if (mb_strlen(trim($search_for)) <= 2 && preg_match('#(er|ai)#i', $search_for) !== 1) {
                     if (preg_match('#[hHgG]#i', substr($search_for, 0, 1)) !== 1) {
                         echo "<P class=\"debug center\">Search criteria \"$search_for\" is too short.<P>";
                         exit;
@@ -213,7 +213,7 @@ if (phpversion() < "7.4.33") {
                 $multi_line = "";
 
                 # if searching for only a strongs number
-                if (preg_match("#[GHgh][\d]{1,4}#", $search_for)) {
+                if (preg_match("#[gh][\d]{1,4}#i", $search_for)) {
                     $search_for_strongs = true;
                     $search_for = strtoupper($search_for);
                 } else {
@@ -221,7 +221,7 @@ if (phpversion() < "7.4.33") {
                 }
 
                 if ($search_for_strongs) {
-                    $strongs_array = ["$search_for" => "supplied"];
+                    $strongs_array = ["$search_for" => "search_for_strongs"];
                 }
 
                 $matches = [];
@@ -530,8 +530,6 @@ if (phpversion() < "7.4.33") {
                     $terms_matched_count = 0;
                     if (count($term_arr) > 0) {
 
-                        echo "<HR>";
-
                         # get a count for how many of each word/phrase occurs
                         $count_arr = array_count_values($term_arr);
 
@@ -546,6 +544,8 @@ if (phpversion() < "7.4.33") {
                         #if ($terms_matched_count > 5) {
                         # don't print the summary if the number of variations is too low
                         if (count(array_keys($count_arr)) > 1) {
+
+                            echo "<HR>";
 
                             # sort the new array alphabetically, case-insensitive
                             sort($swap_count_arr, SORT_NATURAL | SORT_FLAG_CASE);
@@ -572,13 +572,8 @@ if (phpversion() < "7.4.33") {
                             echo "</TABLE>";
                         }
                     }
-
-                    # hr before summary of counts and time taken
-            
+                    echo "<HR>";
                 }
-
-                # display a horizontal rule after the results and before the results summary
-                echo "<HR>";
 
                 # singular or plural results
                 if ($exact_matches == 1) {
