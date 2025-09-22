@@ -14,7 +14,7 @@ mb_internal_encoding("UTF-8");
 # and supports upto 3 consecutive strongs numbers
 $bible_text = "kjvs.csv";
 
-# set to true to get the hash(s)
+# set to true to get the hash(s) of the data file(s)
 if (false) {
     echo "<P>$bible_text CRC32: " . hash_file("crc32", $bible_text) . "</P>";
     #echo hash_file("crc32", "style.css") . "<BR>";
@@ -23,8 +23,8 @@ if (false) {
 }
 
 # ensure the integrity of the data file by checking its hash
-if (hash_file("crc32", $bible_text) != "a6b63118") {
-    ExitWithException("Integrity check for data file \"$bible_text\" failed.<BR>You may need to aquire an original \"$bible_text\" or reinstall this application.<BR>If you intentionally changed \$bible_text in the source code, remove this warning or update the hash value for the data file.");
+if (hash_file("crc32", $bible_text) != "081b0e43") {
+    ExitWithException("Integrity check for data file \"$bible_text\" failed.<BR>You may need to acquire an original \"$bible_text\" or reinstall this application.<BR>If you intentionally changed \$bible_text in the source code, remove this warning or update the hash value for the data file (L26 index.php).");
 }
 
 # ensure after each run all variables are cleared
@@ -41,8 +41,8 @@ if (phpversion() < "7.4.33") {
     ini_set('max_execution_time', '300');
     ini_set('memory_limit', '512M');
 } elseif (phpversion() >= "7.4.33") {
-    ini_set('max_execution_time', '60');
-    ini_set('memory_limit', '256M');
+    ini_set('max_execution_time', '120');
+    ini_set('memory_limit', '512M');
 }
 ?>
 
