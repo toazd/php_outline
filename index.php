@@ -184,7 +184,7 @@ if (phpversion() < "7.4.33") {
                 $search_for = preg_replace("#[^\w:\d ]+#", "", $search_for);
 
                 # if the search criteria is too short, display an error and don't do anything
-                if (mb_strlen(trim($search_for)) <= 2 && preg_match('#(er|ai)#i', $search_for) !== 1) {
+                if (mb_strlen(trim($search_for)) <= 2 && preg_match('#(er|ai|uz)#i', $search_for) !== 1) {
                     if (preg_match('#[hHgG]#i', substr($search_for, 0, 1)) !== 1) {
                         echo "<P class=\"debug center\">Search criteria \"$search_for\" is too short.<P>";
                         exit;
@@ -1169,5 +1169,6 @@ if (phpversion() < "7.4.33") {
         }
     </SCRIPT>
 </BODY>
+
 
 </HTML>
