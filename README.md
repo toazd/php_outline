@@ -12,4 +12,4 @@ Look no further because php_outline accomplishes these tasks and more!
 Technical requirements:
 - Requires a web server with PHP or PHP desktop (chrome): https://github.com/cztomczak/phpdesktop
 - Requires the PHP extension mbstring to be enabled (php.ini)
-- On linux you can test it quickly by simply cloning the repo, entering the directory, then running php -S localhost:8000
+- On linux you can test it quickly by simply cloning the repo, entering the directory, then running `php -S localhost:8000`
