@@ -96,7 +96,7 @@ if (phpversion() < "7.4.33") {
                         <INPUT type="checkbox" name="search_nt" checked>search NT
                     </TD>
                     <TD>
-                        <INPUT type="checkbox" name="full_summary">full summary
+                        <INPUT type="checkbox" name="full_summary" checked>full summary
                     </TD>
                 </TR>
                 <TR>
