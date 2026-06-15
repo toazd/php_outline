@@ -1,3 +1,5 @@
+NOTE: the features of php_outline (and more) have been merged into the Bible app Selah: https://github.com/toazd/selah. php_outline does not handle consecutive strongs numbers very well (when a word has multiple strongs numbers associated with it) and does not include strongs TVM codes (Selah does).
+
 Ever wonder why Strong's didn't include a convenient index of where every code appears? I did, and then I also wondered why does no such digital tool exist?
 
 How about a fast way to lookup a word and find all the Strong's numbers associated with it?
